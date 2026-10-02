@@ -1,1260 +1,1195 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GameSpot Universe</title>
-  <style>
-    :root {
-      --bg-1: #070b17;
-      --bg-2: #101a2b;
-      --panel: rgba(18, 24, 38, 0.9);
-      --panel-2: rgba(22, 29, 44, 0.9);
-      --line: rgba(255,255,255,0.08);
-      --cyan: #00d4ff;
-      --purple: #8b5cf6;
-      --pink: #ff4d9d;
-      --green: #1db954;
-      --text: #edf2ff;
-      --muted: #99a6c2;
-      --shadow: rgba(0,0,0,0.35);
-    }
-
-    * { box-sizing: border-box; }
-    html, body {
-      margin: 0;
-      height: 100%;
-      font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, var(--bg-1), var(--bg-2) 38%, #1c1630 100%);
-      color: var(--text);
-      overflow-x: hidden;
-    }
-
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      background: radial-gradient(circle at 15% 20%, rgba(0,212,255,0.16), transparent 25%),
-                  radial-gradient(circle at 80% 0%, rgba(139,92,246,0.16), transparent 30%),
-                  radial-gradient(circle at 50% 100%, rgba(255,77,157,0.12), transparent 30%);
-      pointer-events: none;
-    }
-
-    .topbar {
-      position: sticky;
-      top: 0;
-      z-index: 30;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 20px;
-      padding: 14px 22px;
-      background: rgba(5, 8, 16, 0.88);
-      border-bottom: 1px solid var(--line);
-      backdrop-filter: blur(8px);
-    }
-
-    .brand {
-      font-size: 1.7rem;
-      font-weight: 800;
-      letter-spacing: 1px;
-      background: linear-gradient(90deg, var(--cyan), #64e0ff, var(--pink));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .search-wrap {
-      flex: 1;
-      max-width: 640px;
-      position: relative;
-    }
-
-    .search-wrap input {
-      width: 100%;
-      padding: 12px 18px;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.03);
-      color: var(--text);
-      border-radius: 999px;
-      font-size: 1rem;
-      outline: none;
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
-    }
-
-    .search-wrap input:focus {
-      border-color: rgba(0,212,255,0.8);
-      box-shadow: 0 0 0 4px rgba(0,212,255,0.12);
-    }
-
-    .nav {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .nav button {
-      border: 1px solid rgba(255,255,255,0.1);
-      background: transparent;
-      color: var(--text);
-      padding: 9px 14px;
-      border-radius: 999px;
-      cursor: pointer;
-      font-weight: 700;
-      transition: 0.25s ease;
-    }
-
-    .nav button.active, .nav button:hover {
-      background: linear-gradient(135deg, var(--cyan), var(--purple));
-      color: #07121d;
-      border-color: transparent;
-    }
-
-    .container {
-      max-width: 1600px;
-      margin: 0 auto;
-      padding: 28px 20px 60px;
-      position: relative;
-      z-index: 1;
-    }
-
-    .section {
-      display: none;
-    }
-
-    .section.active {
-      display: block;
-      animation: fadeIn 0.25s ease;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    h2 {
-      margin: 0 0 18px;
-      font-size: clamp(1.5rem, 2vw, 2.3rem);
-      letter-spacing: 0.04em;
-      color: #dfe7ff;
-    }
-
-    .games-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 18px;
-      margin-top: 18px;
-    }
-
-    .game-card {
-      background: linear-gradient(135deg, rgba(0,212,255,0.08), rgba(139,92,246,0.08));
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 18px;
-      padding: 18px;
-      box-shadow: 0 16px 28px var(--shadow);
-      transition: transform 0.25s ease, border-color 0.25s ease;
-    }
-
-    .game-card:hover {
-      transform: translateY(-4px);
-      border-color: rgba(0,212,255,0.8);
-    }
-
-    .game-card h3 {
-      margin: 0 0 8px;
-      font-size: 1.2rem;
-    }
-
-    .game-card p {
-      margin: 0 0 16px;
-      color: var(--muted);
-      font-size: 0.95rem;
-      line-height: 1.5;
-    }
-
-    .game-card button {
-      width: 100%;
-      border: none;
-      border-radius: 999px;
-      background: linear-gradient(135deg, var(--cyan), var(--purple));
-      color: #06111b;
-      font-weight: 800;
-      padding: 10px 14px;
-      cursor: pointer;
-      transition: transform 0.2s ease;
-    }
-
-    .game-card button:hover {
-      transform: scale(1.02);
-    }
-
-    .game-panel {
-      display: none;
-      background: rgba(10, 15, 26, 0.95);
-      border: 1px solid var(--line);
-      border-radius: 22px;
-      padding: 22px;
-      box-shadow: 0 18px 32px var(--shadow);
-      margin-top: 20px;
-    }
-
-    .game-panel.active {
-      display: block;
-    }
-
-    canvas {
-      width: 100%;
-      display: block;
-      max-width: 900px;
-      margin: 0 auto;
-      background: linear-gradient(180deg, #090f1d, #0a1830 50%, #0f1d29);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 18px;
-    }
-
-    .stats {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 16px;
-    }
-
-    .badge {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 999px;
-      padding: 10px 16px;
-      font-weight: 700;
-      color: var(--text);
-    }
-
-    .music-layout {
-      display: grid;
-      grid-template-columns: 1.2fr 0.8fr;
-      gap: 22px;
-      align-items: start;
-    }
-
-    .list-panel, .player-panel {
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 22px;
-      box-shadow: 0 16px 30px var(--shadow);
-    }
-
-    .list-panel {
-      padding: 18px;
-      min-height: 540px;
-    }
-
-    .list-panel h3 {
-      margin: 0 0 16px;
-      color: var(--green);
-      font-size: 1.1rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    .track-list {
-      display: grid;
-      gap: 12px;
-      max-height: 500px;
-      overflow-y: auto;
-    }
-
-    .track-item {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      background: rgba(255,255,255,0.02);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 14px;
-      padding: 10px 12px;
-      cursor: pointer;
-      transition: 0.2s ease;
-    }
-
-    .track-item:hover {
-      transform: translateX(4px);
-      border-color: rgba(29,185,84,0.8);
-      background: rgba(29,185,84,0.06);
-    }
-
-    .art {
-      width: 54px;
-      height: 54px;
-      border-radius: 12px;
-      background: linear-gradient(135deg, var(--green), #0d4f32);
-      display: grid;
-      place-items: center;
-      font-size: 1.4rem;
-      font-weight: 900;
-      color: white;
-    }
-
-    .track-meta {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .track-meta h4 {
-      margin: 0 0 4px;
-      font-size: 1rem;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .track-meta p {
-      margin: 0;
-      color: var(--muted);
-      font-size: 0.84rem;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .track-time {
-      color: var(--muted);
-      font-size: 0.8rem;
-      white-space: nowrap;
-    }
-
-    .player-panel {
-      padding: 20px;
-    }
-
-    .player-head {
-      text-align: center;
-      margin-bottom: 14px;
-      color: var(--green);
-      font-weight: 800;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      font-size: 0.85rem;
-    }
-
-    .album-art {
-      width: 140px;
-      height: 140px;
-      border-radius: 18px;
-      margin: 10px auto 16px;
-      display: grid;
-      place-items: center;
-      font-size: 2.8rem;
-      background: linear-gradient(135deg, var(--green), #113727);
-      border: 1px solid rgba(255,255,255,0.08);
-      box-shadow: 0 18px 26px rgba(29,185,84,0.2);
-    }
-
-    .track-name {
-      text-align: center;
-      font-size: 1.12rem;
-      font-weight: 700;
-      margin: 0 0 4px;
-    }
-
-    .track-artist {
-      text-align: center;
-      color: var(--muted);
-      font-size: 0.88rem;
-      margin-bottom: 18px;
-    }
-
-    .progress {
-      margin-top: 12px;
-    }
-
-    .progress-bar {
-      height: 8px;
-      border-radius: 999px;
-      background: rgba(255,255,255,0.08);
-      overflow: hidden;
-      cursor: pointer;
-    }
-
-    .progress-fill {
-      width: 0%;
-      height: 100%;
-      border-radius: inherit;
-      background: linear-gradient(90deg, var(--green), #81f5ae);
-    }
-
-    .time-row {
-      margin-top: 8px;
-      display: flex;
-      justify-content: space-between;
-      color: var(--muted);
-      font-size: 0.8rem;
-    }
-
-    .controls {
-      margin-top: 18px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-    }
-
-    .icon-btn {
-      width: 46px;
-      height: 46px;
-      border-radius: 50%;
-      border: 1px solid rgba(29,185,84,0.8);
-      background: transparent;
-      color: var(--green);
-      cursor: pointer;
-      font-size: 1.2rem;
-      font-weight: 800;
-      transition: 0.2s ease;
-    }
-
-    .icon-btn:hover {
-      background: rgba(29,185,84,0.1);
-      transform: translateY(-2px);
-    }
-
-    .icon-btn.primary {
-      width: 64px;
-      height: 64px;
-      background: var(--green);
-      color: #0d2016;
-      border-color: transparent;
-      font-size: 1.6rem;
-    }
-
-    .genre-box {
-      margin-top: 22px;
-      background: rgba(255,255,255,0.02);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 16px;
-      padding: 16px;
-    }
-
-    .genre-box h4 {
-      margin: 0 0 12px;
-      color: var(--green);
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      font-size: 0.8rem;
-    }
-
-    .genre-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .genre-btn {
-      background: rgba(29,185,84,0.08);
-      border: 1px solid rgba(29,185,84,0.5);
-      color: var(--green);
-      border-radius: 999px;
-      padding: 8px 12px;
-      cursor: pointer;
-      font-weight: 700;
-    }
-
-    .genre-btn:hover {
-      background: rgba(29,185,84,0.18);
-    }
-
-    @media (max-width: 980px) {
-      .music-layout {
-        grid-template-columns: 1fr;
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Google Classroom Music & Games</title>
+    <style>
+      :root {
+        --bg: #f3f6fb;
+        --card: #ffffff;
+        --line: #dadce0;
+        --text: #202124;
+        --muted: #5f6368;
+        --blue: #1a73e8;
+        --blue-strong: #0b57d0;
+        --blue-soft: #e8f0fe;
+        --green: #188038;
+        --green-soft: #e6f4ea;
+        --red: #d93025;
+        --yellow: #fbbc04;
+        --shadow: 0 10px 24px rgba(60, 64, 67, 0.12);
       }
-    }
-  </style>
-</head>
-<body>
-  <nav class="topbar">
-    <div class="brand">GameSpot</div>
-    <div class="search-wrap">
-      <input id="globalSearch" type="text" placeholder="Search songs, artists, albums..." />
-    </div>
-    <div class="nav">
-      <button class="active" data-target="games">Games</button>
-      <button data-target="music">Music</button>
-    </div>
-  </nav>
 
-  <div class="container">
-    <section id="games" class="section active">
-      <h2>Arcade</h2>
-      <div class="games-grid">
-        <div class="game-card">
-          <h3>Snake</h3>
-          <p>Classic arcade survival game. Eat, grow, and avoid crashing.</p>
-          <button data-game="snake">Play</button>
-        </div>
-        <div class="game-card">
-          <h3>Flappy Bird</h3>
-          <p>Tap to flap through obstacles and chase a bigger score.</p>
-          <button data-game="flappy">Play</button>
-        </div>
-        <div class="game-card">
-          <h3>Pong</h3>
-          <p>Smash the ball past the AI and win the rally.</p>
-          <button data-game="pong">Play</button>
-        </div>
-        <div class="game-card">
-          <h3>Breakout</h3>
-          <p>Break every brick before your lives run out.</p>
-          <button data-game="breakout">Play</button>
-        </div>
-        <div class="game-card">
-          <h3>Memory Match</h3>
-          <p>Flip cards and match pairs to clear the board.</p>
-          <button data-game="memory">Play</button>
-        </div>
-        <div class="game-card">
-          <h3>Space Dodger</h3>
-          <p>Survive incoming danger and build your score.</p>
-          <button data-game="space">Play</button>
-        </div>
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        min-height: 100%;
+        background: var(--bg);
+        color: var(--text);
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      body {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .topbar {
+        background: #fff;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        padding: 14px 22px;
+        position: sticky;
+        top: 0;
+        z-index: 50;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 700;
+        color: var(--muted);
+        letter-spacing: 0.02em;
+      }
+
+      .brand-mark {
+        width: 22px;
+        height: 22px;
+        border-radius: 6px;
+        background: linear-gradient(135deg, #4285f4, #34a853 40%, #fbbc05 70%, #ea4335);
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.35);
+      }
+
+      .brand-text {
+        font-size: 1.1rem;
+      }
+
+      .nav {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .tab {
+        border: 1px solid var(--line);
+        background: #fff;
+        color: var(--text);
+        border-radius: 999px;
+        padding: 8px 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.2s ease;
+      }
+
+      .tab:hover {
+        border-color: var(--blue);
+        background: #f7faff;
+      }
+
+      .tab.active {
+        background: var(--blue-soft);
+        border-color: #d2e3fc;
+        color: var(--blue-strong);
+      }
+
+      .search-wrap {
+        min-width: 260px;
+        max-width: 420px;
+        flex: 1;
+      }
+
+      .search {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: #f1f3f4;
+        color: var(--text);
+        padding: 10px 16px;
+        font-size: 0.96rem;
+        outline: none;
+      }
+
+      .search:focus {
+        border-color: var(--blue);
+        background: #fff;
+        box-shadow: 0 0 0 3px rgba(26,115,232,.12);
+      }
+
+      .container {
+        width: min(1200px, calc(100% - 28px));
+        margin: 24px auto 40px;
+      }
+
+      .section {
+        display: none;
+      }
+
+      .section.active {
+        display: block;
+      }
+
+      .hero {
+        background: linear-gradient(135deg, #dfe9ff, #edf3ff);
+        border: 1px solid #d2e3fc;
+        border-radius: 22px;
+        padding: 24px;
+        box-shadow: var(--shadow);
+      }
+
+      .hero h1 {
+        font-size: clamp(2rem, 2.6vw, 2.9rem);
+        margin: 0 0 8px;
+        color: #174ea6;
+      }
+
+      .hero p {
+        margin: 0;
+        font-size: 1.05rem;
+        color: var(--muted);
+      }
+
+      .music-layout {
+        display: grid;
+        grid-template-columns: 1.45fr 1fr;
+        gap: 22px;
+        margin-top: 22px;
+      }
+
+      .panel {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        box-shadow: var(--shadow);
+      }
+
+      .panel-header {
+        padding: 18px 18px 10px;
+        font-weight: 700;
+        color: var(--green);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        font-size: 0.8rem;
+      }
+
+      .tracklist {
+        list-style: none;
+        margin: 0;
+        padding: 0 12px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        max-height: 620px;
+        overflow-y: auto;
+      }
+
+      .track {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: #f9fafe;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 12px 12px;
+        cursor: pointer;
+        transition: 0.2s ease;
+      }
+
+      .track:hover {
+        border-color: var(--blue);
+        transform: translateX(2px);
+        background: #f4f8ff;
+      }
+
+      .track.active {
+        border-color: var(--green);
+        background: var(--green-soft);
+      }
+
+      .track-art {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, var(--blue), #7ab5ff);
+        display: grid;
+        place-items: center;
+        color: #fff;
+        font-size: 1.2rem;
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+
+      .track-info {
+        min-width: 0;
+        flex: 1;
+      }
+
+      .track-name {
+        font-weight: 700;
+        margin-bottom: 4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .track-meta {
+        color: var(--muted);
+        font-size: 0.82rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .player {
+        padding: 18px;
+      }
+
+      .player-label {
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--green);
+        font-weight: 700;
+        font-size: 0.77rem;
+        margin-bottom: 12px;
+      }
+
+      .cover {
+        width: 150px;
+        height: 150px;
+        border-radius: 22px;
+        margin: 0 auto 14px;
+        background: linear-gradient(135deg, var(--green), #82d68d);
+        display: grid;
+        place-items: center;
+        color: #fff;
+        font-size: 3.3rem;
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.3);
+      }
+
+      .now-playing {
+        text-align: center;
+      }
+
+      .title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin-bottom: 6px;
+      }
+
+      .artist {
+        color: var(--muted);
+      }
+
+      .progress-wrap {
+        margin-top: 18px;
+      }
+
+      .progress-bar {
+        height: 8px;
+        background: #edf1f5;
+        border-radius: 999px;
+        overflow: hidden;
+        cursor: pointer;
+        border: 1px solid var(--line);
+      }
+
+      .progress-fill {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, var(--green), #5acb7d);
+        border-radius: inherit;
+      }
+
+      .time-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.8rem;
+        color: var(--muted);
+        margin-top: 8px;
+      }
+
+      .controls {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        margin-top: 18px;
+      }
+
+      .control {
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        border: 1px solid var(--green);
+        background: transparent;
+        color: var(--green);
+        font-size: 1.2rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.2s ease;
+      }
+
+      .control:hover {
+        background: var(--green-soft);
+      }
+
+      .control.play {
+        width: 60px;
+        height: 60px;
+        background: var(--green);
+        color: #fff;
+        border-color: var(--green);
+      }
+
+      .genres {
+        margin-top: 18px;
+        border-top: 1px solid var(--line);
+        padding-top: 18px;
+      }
+
+      .genres h3 {
+        margin: 0 0 12px;
+        color: var(--green);
+        font-size: 0.8rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .genre-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .tag {
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: #f7f9fb;
+        color: var(--text);
+        padding: 7px 12px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      .tag.active {
+        background: var(--green-soft);
+        border-color: #b8e7bf;
+        color: var(--green);
+      }
+
+      .game-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 18px;
+        margin-top: 26px;
+      }
+
+      .game-card {
+        background: linear-gradient(135deg, #fff, #f4f8ff);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        box-shadow: var(--shadow);
+        padding: 18px;
+      }
+
+      .game-card h3 {
+        margin: 0 0 10px;
+      }
+
+      .game-card p {
+        margin: 0 0 14px;
+        color: var(--muted);
+        line-height: 1.45;
+      }
+
+      .game-card button {
+        width: 100%;
+        border: none;
+        border-radius: 10px;
+        background: linear-gradient(135deg, var(--blue), var(--blue-strong));
+        color: #fff;
+        padding: 11px 12px;
+        cursor: pointer;
+        font-weight: 700;
+      }
+
+      .game-area {
+        display: none;
+        margin-top: 24px;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        box-shadow: var(--shadow);
+        padding: 18px;
+      }
+
+      .game-area.active {
+        display: block;
+      }
+
+      canvas {
+        width: 100%;
+        max-width: 980px;
+        display: block;
+        margin: 0 auto;
+        background: linear-gradient(180deg, #0f1621, #1a2638);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+      }
+
+      .scorebox {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 14px;
+      }
+
+      .score-item {
+        background: #f6f9ff;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 8px 14px;
+        font-weight: 700;
+        color: var(--text);
+      }
+
+      .back {
+        margin-top: 14px;
+        display: inline-block;
+        background: var(--red);
+        color: #fff;
+        border: none;
+        border-radius: 999px;
+        padding: 10px 18px;
+        cursor: pointer;
+        font-weight: 700;
+      }
+
+      @media (max-width: 900px) {
+        .music-layout {
+          grid-template-columns: 1fr;
+        }
+
+        .topbar {
+          flex-wrap: wrap;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark"></span>
+        <span class="brand-text">Google Classroom</span>
       </div>
 
-      <div id="snake-panel" class="game-panel">
-        <canvas id="snakeCanvas" width="900" height="420"></canvas>
-        <div class="stats">
-          <div class="badge">Score: <span id="snakeScore">0</span></div>
-          <div class="badge">Best: <span id="snakeBest">0</span></div>
-        </div>
+      <nav class="nav" aria-label="Main tabs">
+        <button class="tab active" data-tab="home">Home</button>
+        <button class="tab" data-tab="music">Music</button>
+        <button class="tab" data-tab="games">Games</button>
+      </nav>
+
+      <div class="search-wrap">
+        <input id="searchInput" class="search" type="text" placeholder="Search songs, artists, albums..." />
       </div>
+    </header>
 
-      <div id="flappy-panel" class="game-panel">
-        <canvas id="flappyCanvas" width="900" height="420"></canvas>
-        <div class="stats">
-          <div class="badge">Score: <span id="flappyScore">0</span></div>
+    <main class="container">
+      <section id="home" class="section active">
+        <div class="hero">
+          <h1>Welcome to Class Tunes</h1>
+          <p>Press play for music, browse the library, or head to the mini games area.</p>
         </div>
-      </div>
+      </section>
 
-      <div id="pong-panel" class="game-panel">
-        <canvas id="pongCanvas" width="900" height="420"></canvas>
-        <div class="stats">
-          <div class="badge">Player: <span id="playerScore">0</span></div>
-          <div class="badge">AI: <span id="aiScore">0</span></div>
-        </div>
-      </div>
+      <section id="music" class="section">
+        <div class="music-layout">
+          <div class="panel">
+            <div class="panel-header">Library</div>
+            <ul id="trackList" class="tracklist" aria-live="polite"></ul>
+          </div>
 
-      <div id="breakout-panel" class="game-panel">
-        <canvas id="breakoutCanvas" width="900" height="420"></canvas>
-        <div class="stats">
-          <div class="badge">Score: <span id="breakoutScore">0</span></div>
-          <div class="badge">Lives: <span id="breakoutLives">3</span></div>
-        </div>
-      </div>
-
-      <div id="memory-panel" class="game-panel">
-        <div id="memoryBoard" style="display:grid; grid-template-columns:repeat(4, 1fr); gap: 12px; max-width: 520px; margin: 0 auto;"></div>
-        <div class="stats">
-          <div class="badge">Matches: <span id="memoryMatches">0</span></div>
-          <div class="badge">Moves: <span id="memoryMoves">0</span></div>
-        </div>
-      </div>
-
-      <div id="space-panel" class="game-panel">
-        <canvas id="spaceCanvas" width="900" height="420"></canvas>
-        <div class="stats">
-          <div class="badge">Score: <span id="spaceScore">0</span></div>
-          <div class="badge">Wave: <span id="spaceWave">1</span></div>
-        </div>
-      </div>
-    </section>
-
-    <section id="music" class="section">
-      <h2>Music</h2>
-      <div class="music-layout">
-        <div class="list-panel">
-          <h3>Library</h3>
-          <div id="trackList" class="track-list"></div>
-        </div>
-
-        <aside class="player-panel">
-          <div class="player-head">Now Playing</div>
-          <div class="album-art">♪</div>
-          <div class="track-name" id="trackTitle">Select a track</div>
-          <div class="track-artist" id="trackArtist">Artist</div>
-
-          <div class="progress">
-            <div class="progress-bar" id="progressBar">
-              <div class="progress-fill" id="progressFill"></div>
+          <div class="panel player">
+            <div class="player-label">Now playing</div>
+            <div id="cover" class="cover">♪</div>
+            <div class="now-playing">
+              <div id="songTitle" class="title">Select a track</div>
+              <div id="songArtist" class="artist">Artist</div>
             </div>
-            <div class="time-row">
-              <span id="currentTime">0:00</span>
-              <span id="totalTime">0:00</span>
+
+            <div class="progress-wrap">
+              <div id="progressBar" class="progress-bar">
+                <div id="progressFill" class="progress-fill"></div>
+              </div>
+              <div class="time-row">
+                <span id="currentTime">0:00</span>
+                <span id="totalTime">0:00</span>
+              </div>
+            </div>
+
+            <div class="controls">
+              <button class="control" id="prevBtn" aria-label="Previous song">⏮</button>
+              <button class="control play" id="playToggle" aria-label="Play or pause">▶</button>
+              <button class="control" id="nextBtn" aria-label="Next song">⏭</button>
+            </div>
+
+            <div class="genres">
+              <h3>Genres</h3>
+              <div class="genre-tags">
+                <button class="tag active" data-genre="all">All</button>
+                <button class="tag" data-genre="pop">Pop</button>
+                <button class="tag" data-genre="rock">Rock</button>
+                <button class="tag" data-genre="hiphop">Hip-Hop</button>
+                <button class="tag" data-genre="electronic">Electronic</button>
+                <button class="tag" data-genre="indie">Indie</button>
+              </div>
             </div>
           </div>
-
-          <div class="controls">
-            <button class="icon-btn" id="prevBtn">⏮</button>
-            <button class="icon-btn primary" id="playBtn">▶</button>
-            <button class="icon-btn" id="nextBtn">⏭</button>
-          </div>
-
-          <div class="genre-box">
-            <h4>Genres</h4>
-            <div class="genre-row">
-              <button class="genre-btn" data-genre="all">All</button>
-              <button class="genre-btn" data-genre="pop">Pop</button>
-              <button class="genre-btn" data-genre="rock">Rock</button>
-              <button class="genre-btn" data-genre="hiphop">Hip-Hop</button>
-              <button class="genre-btn" data-genre="electronic">Electronic</button>
-              <button class="genre-btn" data-genre="indie">Indie</button>
-            </div>
-          </div>
-        </aside>
-      </div>
-    </section>
-  </div>
-
-  <script>
-    // Music dataset (real artist/song names, local library, no API required)
-    const music = [
-      {title: 'Blinding Lights', artist: 'The Weeknd', genre: 'pop', duration: 200, album: 'After Hours'},
-      {title: 'Shape of You', artist: 'Ed Sheeran', genre: 'pop', duration: 233, album: '÷'},
-      {title: 'As It Was', artist: 'Harry Styles', genre: 'pop', duration: 167, album: 'Harry\'s House'},
-      {title: 'Levitating', artist: 'Dua Lipa', genre: 'pop', duration: 203, album: 'Future Nostalgia'},
-      {title: 'Flowers', artist: 'Miley Cyrus', genre: 'pop', duration: 200, album: 'Endless Summer Vacation'},
-      {title: 'Anti-Hero', artist: 'Taylor Swift', genre: 'pop', duration: 200, album: '1989 (Taylor\'s Version)'},
-      {title: 'Bad Guy', artist: 'Billie Eilish', genre: 'pop', duration: 194, album: 'WHEN WE ALL FALL ASLEEP, WHERE DO WE GO?'},
-      {title: 'Rolling in the Deep', artist: 'Adele', genre: 'pop', duration: 228, album: '21'},
-      {title: 'Someone Like You', artist: 'Adele', genre: 'pop', duration: 285, album: '21'},
-      {title: 'HUMBLE.', artist: 'Kendrick Lamar', genre: 'hiphop', duration: 177, album: 'DAMN.'},
-      {title: 'God\'s Plan', artist: 'Drake', genre: 'hiphop', duration: 198, album: 'Scorpion'},
-      {title: 'Sicko Mode', artist: 'Travis Scott', genre: 'hiphop', duration: 312, album: 'ASTROWORLD'},
-      {title: 'In Da Club', artist: '50 Cent', genre: 'hiphop', duration: 193, album: 'Get Rich or Die Tryin\''},
-      {title: 'Lose Yourself', artist: 'Eminem', genre: 'hiphop', duration: 325, album: '8 Mile'},
-      {title: 'No Role Modelz', artist: 'J. Cole', genre: 'hiphop', duration: 292, album: '2014 Forest Hills Drive'},
-      {title: 'Bohemian Rhapsody', artist: 'Queen', genre: 'rock', duration: 354, album: 'A Night at the Opera'},
-      {title: 'Hotel California', artist: 'Eagles', genre: 'rock', duration: 390, album: 'Hotel California'},
-      {title: 'Wonderwall', artist: 'Oasis', genre: 'rock', duration: 258, album: '(What\'s the Story) Morning Glory?'},
-      {title: 'Smells Like Teen Spirit', artist: 'Nirvana', genre: 'rock', duration: 301, album: 'Nevermind'},
-      {title: 'Sweet Child O\' Mine', artist: 'Guns N\' Roses', genre: 'rock', duration: 355, album: 'Appetite for Destruction'},
-      {title: 'Stairway to Heaven', artist: 'Led Zeppelin', genre: 'rock', duration: 482, album: 'Led Zeppelin IV'},
-      {title: 'Levels', artist: 'Avicii', genre: 'electronic', duration: 222, album: 'True'},
-      {title: 'Titanium', artist: 'David Guetta', genre: 'electronic', duration: 245, album: 'Nothing but the Beat'},
-      {title: 'Midnight City', artist: 'M83', genre: 'electronic', duration: 242, album: 'Hurry Up, We\'re Dreaming'},
-      {title: 'Animals', artist: 'Martin Garrix', genre: 'electronic', duration: 281, album: 'Animals'},
-      {title: 'Wake Me Up', artist: 'Avicii', genre: 'electronic', duration: 249, album: 'True'},
-      {title: 'Electric Feel', artist: 'MGMT', genre: 'indie', duration: 228, album: 'Oracular Spectacular'},
-      {title: 'Take Me Out', artist: 'Franz Ferdinand', genre: 'indie', duration: 256, album: 'Franz Ferdinand'},
-      {title: 'Use Somebody', artist: 'Kings of Leon', genre: 'indie', duration: 230, album: 'Only by the Night'},
-      {title: 'Somebody Told Me', artist: 'The Killers', genre: 'indie', duration: 204, album: 'Hot Fuss'},
-      {title: 'Mr. Brightside', artist: 'The Killers', genre: 'indie', duration: 224, album: 'Hot Fuss'},
-      {title: 'Last Nite', artist: 'The Strokes', genre: 'indie', duration: 217, album: 'Is This It'},
-      {title: 'Take On Me', artist: 'a-ha', genre: 'pop', duration: 228, album: 'Hunting High and Low'},
-      {title: 'Don\'t Stop Me Now', artist: 'Queen', genre: 'rock', duration: 210, album: 'Jazz'},
-      {title: 'Hey Jude', artist: 'The Beatles', genre: 'rock', duration: 431, album: 'Hey Jude'},
-      {title: 'Someone You Loved', artist: 'Lewis Capaldi', genre: 'pop', duration: 182, album: 'Divinely Uninspired to a Hellish Extent'},
-      {title: 'Perfect', artist: 'Ed Sheeran', genre: 'pop', duration: 263, album: '÷'},
-      {title: 'Thinking Out Loud', artist: 'Ed Sheeran', genre: 'pop', duration: 281, album: 'x'},
-      {title: 'Greedy', artist: 'Tate McRae', genre: 'pop', duration: 175, album: 'Think Later'},
-      {title: 'Espresso', artist: 'Sabrina Carpenter', genre: 'pop', duration: 175, album: 'Short n\' Sweet'},
-      {title: 'Please Please Please', artist: 'Sabrina Carpenter', genre: 'pop', duration: 187, album: 'Short n\' Sweet'},
-      {title: 'Kill Bill', artist: 'SZA', genre: 'pop', duration: 153, album: 'SOS'},
-      {title: 'About Damn Time', artist: 'Lizzo', genre: 'pop', duration: 191, album: 'Special'},
-      {title: 'Umbrella', artist: 'Rihanna', genre: 'pop', duration: 255, album: 'Good Girl Gone Bad'},
-      {title: 'Firework', artist: 'Katy Perry', genre: 'pop', duration: 228, album: 'Teenage Dream'},
-      {title: 'Numb', artist: 'Linkin Park', genre: 'rock', duration: 185, album: 'Meteora'},
-      {title: 'In the End', artist: 'Linkin Park', genre: 'rock', duration: 217, album: 'Hybrid Theory'},
-      {title: 'Starting Over', artist: 'Chris Stapleton', genre: 'rock', duration: 235, album: 'Starting Over'},
-      {title: 'Uptown Funk', artist: 'Mark Ronson ft. Bruno Mars', genre: 'pop', duration: 270, album: 'Uptown Special'},
-      {title: 'Thriller', artist: 'Michael Jackson', genre: 'pop', duration: 357, album: 'Thriller'},
-      {title: 'Billie Jean', artist: 'Michael Jackson', genre: 'pop', duration: 294, album: 'Thriller'},
-      {title: 'Beat It', artist: 'Michael Jackson', genre: 'pop', duration: 258, album: 'Thriller'},
-      {title: 'Black or White', artist: 'Michael Jackson', genre: 'pop', duration: 256, album: 'Dangerous'},
-      {title: 'Smooth Criminal', artist: 'Michael Jackson', genre: 'pop', duration: 263, album: 'Bad'},
-      {title: 'The Real Slim Shady', artist: 'Eminem', genre: 'hiphop', duration: 284, album: 'The Marshall Mathers LP'},
-      {title: 'Stan', artist: 'Eminem', genre: 'hiphop', duration: 404, album: 'The Marshall Mathers LP'},
-      {title: 'Only Girl (In The World)', artist: 'Rihanna', genre: 'pop', duration: 235, album: 'Loud'},
-      {title: 'Dancing Queen', artist: 'ABBA', genre: 'pop', duration: 217, album: 'Arrival'},
-      {title: 'Mamma Mia', artist: 'ABBA', genre: 'pop', duration: 213, album: 'ABBA'},
-      {title: 'Hey Ya!', artist: 'OutKast', genre: 'pop', duration: 235, album: 'Speakerboxxx/The Love Below'},
-      {title: 'Summertime Sadness', artist: 'Lana Del Rey', genre: 'pop', duration: 216, album: 'Born to Die'},
-      {title: 'Old Town Road', artist: 'Lil Nas X', genre: 'hiphop', duration: 113, album: '7'},
-      {title: 'Industry Baby', artist: 'Lil Nas X', genre: 'hiphop', duration: 212, album: 'Montero'},
-      {title: 'Without Me', artist: 'Halsey', genre: 'pop', duration: 205, album: 'Manic'},
-      {title: 'Ocean Eyes', artist: 'Billie Eilish', genre: 'pop', duration: 200, album: 'Dont Smile at Me'},
-      {title: 'Good 4 U', artist: 'Olivia Rodrigo', genre: 'pop', duration: 178, album: 'SOUR'},
-      {title: 'drivers license', artist: 'Olivia Rodrigo', genre: 'pop', duration: 247, album: 'SOUR'},
-      {title: 'Sunflower', artist: 'Post Malone & Swae Lee', genre: 'pop', duration: 158, album: 'Spider-Man: Into the Spider-Verse'},
-      {title: 'Circles', artist: 'Post Malone', genre: 'pop', duration: 214, album: 'Hollywood\'s Bleeding'},
-      {title: 'The Pretender', artist: 'Foo Fighters', genre: 'rock', duration: 269, album: 'Echoes, Silence, Patience & Grace'},
-      {title: 'Back in Black', artist: 'AC/DC', genre: 'rock', duration: 255, album: 'Back in Black'},
-      {title: 'Highway to Hell', artist: 'AC/DC', genre: 'rock', duration: 208, album: 'Highway to Hell'},
-      {title: 'Zombie', artist: 'The Cranberries', genre: 'rock', duration: 305, album: 'No Need to Argue'},
-      {title: 'With Or Without You', artist: 'U2', genre: 'rock', duration: 296, album: 'The Joshua Tree'},
-      {title: 'I Will Survive', artist: 'Gloria Gaynor', genre: 'pop', duration: 195, album: 'Love Tracks'},
-      {title: 'Shallow', artist: 'Lady Gaga & Bradley Cooper', genre: 'pop', duration: 217, album: 'A Star Is Born'},
-      {title: 'My House', artist: 'Flo Rida', genre: 'pop', duration: 191, album: 'Wild Ones'},
-      {title: 'Can\'t Hold Us', artist: 'Macklemore & Ryan Lewis', genre: 'hiphop', duration: 258, album: 'The Heist'},
-      {title: 'Heard\'em Say', artist: 'Kanye West', genre: 'hiphop', duration: 208, album: 'Late Registration'},
-      {title: 'DNA.', artist: 'Kendrick Lamar', genre: 'hiphop', duration: 185, album: 'DAMN.'},
-      {title: 'Empire State of Mind', artist: 'Jay-Z & Alicia Keys', genre: 'hiphop', duration: 273, album: 'The Blueprint 3'},
-      {title: 'Can\'t Buy Me Love', artist: 'The Beatles', genre: 'rock', duration: 154, album: 'A Hard Day\'s Night'},
-      {title: 'Dancing in the Moonlight', artist: 'Toploader', genre: 'pop', duration: 203, album: 'Onka\'s Big Moka'},
-      {title: 'Crazy in Love', artist: 'Beyoncé', genre: 'pop', duration: 236, album: 'Dangerously in Love'},
-      {title: 'Run the World (Girls)', artist: 'Beyoncé', genre: 'pop', duration: 242, album: '4'},
-      {title: 'Toxic', artist: 'Britney Spears', genre: 'pop', duration: 198, album: 'In the Zone'},
-      {title: 'Single Ladies', artist: 'Beyoncé', genre: 'pop', duration: 193, album: 'I Am... Sasha Fierce'},
-      {title: 'Hips Don\'t Lie', artist: 'Shakira', genre: 'pop', duration: 218, album: 'Oral Fixation, Vol. 2'},
-      {title: 'Waka Waka', artist: 'Shakira', genre: 'pop', duration: 200, album: 'Sale El Sol'},
-      {title: 'Bad Guy', artist: 'Billie Eilish', genre: 'pop', duration: 194, album: 'WHEN WE ALL FALL ASLEEP, WHERE DO WE GO?'},
-      {title: 'Ocean Eyes', artist: 'Billie Eilish', genre: 'pop', duration: 200, album: 'Dont Smile at Me'},
-      {title: 'Everything I Own', artist: 'Bread', genre: 'rock', duration: 196, album: 'Baby I\'m-a Want You'},
-      {title: 'Nothing Else Matters', artist: 'Metallica', genre: 'rock', duration: 386, album: 'Metallica'},
-      {title: 'Enter Sandman', artist: 'Metallica', genre: 'rock', duration: 331, album: 'Metallica'},
-      {title: 'The Middle', artist: 'Jimmy Eat World', genre: 'rock', duration: 166, album: 'Bleed American'},
-      {title: 'Dreams', artist: 'Fleetwood Mac', genre: 'rock', duration: 257, album: 'Rumours'},
-      {title: 'July', artist: 'Noah Cyrus', genre: 'pop', duration: 203, album: 'The Hardest Part'},
-      {title: 'Love Yourself', artist: 'Justin Bieber', genre: 'pop', duration: 220, album: 'Purpose'}
-    ];
-
-    const state = {
-      activeSection: 'games',
-      currentTrack: 0,
-      currentGenre: 'all',
-      isPlaying: false,
-      progress: 0,
-      timer: null
-    };
-
-    const navButtons = document.querySelectorAll('.nav button');
-    const tabs = document.querySelectorAll('.section');
-    const globalSearch = document.getElementById('globalSearch');
-
-    navButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        const id = btn.dataset.target;
-        navButtons.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        tabs.forEach(section => section.classList.toggle('active', section.id === id));
-      });
-    });
-
-    function formatTime(seconds) {
-      const mins = Math.floor(seconds / 60);
-      const secs = seconds % 60;
-      return `${mins}:${String(secs).padStart(2, '0')}`;
-    }
-
-    function renderTrackList(list = filteredTracks()) {
-      const trackList = document.getElementById('trackList');
-      trackList.innerHTML = list.map((song, index) => `
-        <div class="track-item" data-index="${index}">
-          <div class="art">♪</div>
-          <div class="track-meta">
-            <h4>${song.title}</h4>
-            <p>${song.artist} • ${song.album}</p>
-          </div>
-          <div class="track-time">${formatTime(song.duration)}</div>
         </div>
-      `).join('');
+      </section>
 
-      document.querySelectorAll('.track-item').forEach(item => {
-        item.addEventListener('click', () => {
-          const idx = Number(item.dataset.index);
-          const originalIndex = music.indexOf(list[idx]);
-          state.currentTrack = originalIndex;
-          updatePlayer();
-          if (!state.isPlaying) togglePlay();
+      <section id="games" class="section">
+        <div class="game-grid">
+          <div class="game-card">
+            <h3>Snake</h3>
+            <p>Classic arcade snake. Use arrow keys.</p>
+            <button data-game="snake">Play</button>
+          </div>
+
+          <div class="game-card">
+            <h3>Flappy</h3>
+            <p>Tap to flap through obstacles.</p>
+            <button data-game="flappy">Play</button>
+          </div>
+
+          <div class="game-card">
+            <h3>Pong</h3>
+            <p>Challenge the computer paddle.</p>
+            <button data-game="pong">Play</button>
+          </div>
+
+          <div class="game-card">
+            <h3>Breakout</h3>
+            <p>Smash all bricks before your lives run out.</p>
+            <button data-game="breakout">Play</button>
+          </div>
+
+          <div class="game-card">
+            <h3>Memory Match</h3>
+            <p>Flip cards and match the pairs.</p>
+            <button data-game="memory">Play</button>
+          </div>
+
+          <div class="game-card">
+            <h3>Space Shooter</h3>
+            <p>Destroy incoming targets for points.</p>
+            <button data-game="space">Play</button>
+          </div>
+        </div>
+
+        <div id="snakeArea" class="game-area">
+          <canvas id="snakeCanvas" width="900" height="420"></canvas>
+          <div class="scorebox"><span class="score-item">Score: <span id="snakeScore">0</span></span></div>
+          <button class="back" data-close="snake">Back</button>
+        </div>
+
+        <div id="flappyArea" class="game-area">
+          <canvas id="flappyCanvas" width="900" height="420"></canvas>
+          <div class="scorebox"><span class="score-item">Score: <span id="flappyScore">0</span></span></div>
+          <button class="back" data-close="flappy">Back</button>
+        </div>
+
+        <div id="pongArea" class="game-area">
+          <canvas id="pongCanvas" width="900" height="420"></canvas>
+          <div class="scorebox"><span class="score-item">Player: <span id="pongPlayer">0</span></span><span class="score-item">AI: <span id="pongAI">0</span></span></div>
+          <button class="back" data-close="pong">Back</button>
+        </div>
+
+        <div id="breakoutArea" class="game-area">
+          <canvas id="breakoutCanvas" width="900" height="420"></canvas>
+          <div class="scorebox"><span class="score-item">Score: <span id="breakoutScore">0</span></span><span class="score-item">Lives: <span id="breakoutLives">3</span></span></div>
+          <button class="back" data-close="breakout">Back</button>
+        </div>
+
+        <div id="memoryArea" class="game-area">
+          <div id="memoryGrid" style="display:grid; grid-template-columns:repeat(4, minmax(80px, 1fr)); gap:12px; max-width:460px; margin:0 auto;"></div>
+          <div class="scorebox"><span class="score-item">Matches: <span id="memoryMatches">0</span></span></div>
+          <button class="back" data-close="memory">Back</button>
+        </div>
+
+        <div id="spaceArea" class="game-area">
+          <canvas id="spaceCanvas" width="900" height="420"></canvas>
+          <div class="scorebox"><span class="score-item">Score: <span id="spaceScore">0</span></span></div>
+          <button class="back" data-close="space">Back</button>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const tabButtons = document.querySelectorAll('.tab');
+      const sections = document.querySelectorAll('.section');
+      const searchInput = document.getElementById('searchInput');
+
+      tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          const target = button.dataset.tab;
+          tabButtons.forEach(el => el.classList.toggle('active', el === button));
+          sections.forEach(section => section.classList.toggle('active', section.id === target));
         });
       });
-    }
 
-    function filteredTracks() {
-      const q = globalSearch.value.trim().toLowerCase();
-      let list = music.filter(song => {
-        if (state.currentGenre !== 'all' && song.genre !== state.currentGenre) return false;
-        if (!q) return true;
-        return [song.title, song.artist, song.album, song.genre].join(' ').toLowerCase().includes(q);
-      });
-      return list;
-    }
+      const tracks = [
+        { title: 'Neon Drift', artist: 'Luna Cloud', album: 'Skyline', genre: 'electronic', duration: 176, notes: [261.63, 329.63, 392.0, 523.25, 392.0, 329.63] },
+        { title: 'Sunrise Loop', artist: 'Aster', album: 'Morning Echo', genre: 'pop', duration: 188, notes: [220.0, 261.63, 329.63, 392.0, 329.63, 261.63] },
+        { title: 'Afterglow', artist: 'Mira Vale', album: 'Daybreak', genre: 'indie', duration: 204, notes: [293.66, 349.23, 392.0, 440.0, 392.0, 349.23] },
+        { title: 'Retro Engine', artist: 'Signal 9', album: 'Night Circuit', genre: 'electronic', duration: 196, notes: [196.0, 246.94, 293.66, 349.23, 293.66, 246.94] },
+        { title: 'Bloom', artist: 'Nova Bloom', album: 'Petals', genre: 'pop', duration: 214, notes: [329.63, 392.0, 493.88, 440.0, 392.0, 329.63] },
+        { title: 'High Tide', artist: 'Harbor', album: 'Coastlines', genre: 'rock', duration: 221, notes: [174.61, 220.0, 261.63, 329.63, 261.63, 220.0] },
+        { title: 'Velvet Streets', artist: 'Noir Lane', album: 'Late Hours', genre: 'indie', duration: 198, notes: [146.83, 174.61, 220.0, 261.63, 220.0, 174.61] },
+        { title: 'Chrome Runner', artist: 'Vector', album: 'Pulse', genre: 'hiphop', duration: 188, notes: [220.0, 293.66, 349.23, 293.66, 261.63, 220.0] },
+        { title: 'Golden Hour', artist: 'Sora', album: 'Heatwave', genre: 'pop', duration: 215, notes: [246.94, 329.63, 392.0, 523.25, 392.0, 329.63] },
+        { title: 'Blue Echo', artist: 'Cedar Sky', album: 'Low Light', genre: 'rock', duration: 204, notes: [196.0, 261.63, 329.63, 392.0, 329.63, 261.63] },
+        { title: 'Midnight Cart', artist: 'Kite', album: 'Static City', genre: 'electronic', duration: 225, notes: [220.0, 246.94, 293.66, 392.0, 293.66, 246.94] },
+        { title: 'Lighthouse', artist: 'North Harbor', album: 'Open Sea', genre: 'indie', duration: 234, notes: [174.61, 220.0, 293.66, 349.23, 293.66, 220.0] },
+        { title: 'City Lights', artist: 'Daze', album: 'Metro', genre: 'pop', duration: 193, notes: [261.63, 329.63, 440.0, 392.0, 329.63, 261.63] },
+        { title: 'River Run', artist: 'Juniper', album: 'Current', genre: 'rock', duration: 216, notes: [146.83, 220.0, 246.94, 293.66, 246.94, 220.0] },
+        { title: 'Fast Lane', artist: 'Voltage', album: 'Shift', genre: 'hiphop', duration: 192, notes: [220.0, 293.66, 392.0, 293.66, 246.94, 220.0] },
+        { title: 'Moon Signal', artist: 'Halcyon', album: 'Quiet Stars', genre: 'electronic', duration: 181, notes: [293.66, 349.23, 440.0, 493.88, 440.0, 349.23] },
+        { title: 'Soft Static', artist: 'Miko', album: 'Night Drive', genre: 'pop', duration: 208, notes: [196.0, 220.0, 293.66, 349.23, 293.66, 220.0] },
+        { title: 'Summer Trace', artist: 'East Lane', album: 'Heat', genre: 'indie', duration: 210, notes: [246.94, 293.66, 392.0, 493.88, 392.0, 293.66] },
+        { title: 'Glass Echo', artist: 'Ari Faye', album: 'Clear Skies', genre: 'pop', duration: 190, notes: [220.0, 261.63, 349.23, 392.0, 349.23, 261.63] },
+        { title: 'Signal Bloom', artist: 'Pixel Harbor', album: 'Glow', genre: 'electronic', duration: 200, notes: [392.0, 466.16, 523.25, 659.25, 523.25, 466.16] },
+      ];
 
-    globalSearch.addEventListener('input', () => {
-      renderTrackList(filteredTracks());
-    });
+      let currentGenre = 'all';
+      let currentTrack = 0;
+      let isPlaying = false;
+      let loopTimer = null;
+      let audioContext = null;
+      let progress = 0;
 
-    document.querySelectorAll('.genre-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        state.currentGenre = btn.dataset.genre;
-        renderTrackList(filteredTracks());
-      });
-    });
-
-    function updatePlayer() {
-      const song = music[state.currentTrack];
-      document.getElementById('trackTitle').textContent = song.title;
-      document.getElementById('trackArtist').textContent = `${song.artist} • ${song.album}`;
-      document.getElementById('totalTime').textContent = formatTime(song.duration);
-      document.getElementById('currentTime').textContent = '0:00';
-      document.getElementById('progressFill').style.width = '0%';
-      state.progress = 0;
-    }
-
-    function togglePlay() {
-      state.isPlaying = !state.isPlaying;
-      document.getElementById('playBtn').textContent = state.isPlaying ? '❚❚' : '▶';
-
-      if (state.isPlaying) {
-        clearInterval(state.timer);
-        state.timer = setInterval(() => {
-          const song = music[state.currentTrack];
-          state.progress += 1;
-          if (state.progress >= song.duration) {
-            nextTrack();
-            return;
-          }
-          document.getElementById('progressFill').style.width = `${(state.progress / song.duration) * 100}%`;
-          document.getElementById('currentTime').textContent = formatTime(state.progress);
-        }, 1000);
-      } else {
-        clearInterval(state.timer);
-      }
-    }
-
-    function nextTrack() {
-      state.currentTrack = (state.currentTrack + 1) % music.length;
-      updatePlayer();
-      if (state.isPlaying) togglePlay();
-      togglePlay();
-    }
-
-    function prevTrack() {
-      state.currentTrack = (state.currentTrack - 1 + music.length) % music.length;
-      updatePlayer();
-      if (state.isPlaying) togglePlay();
-      togglePlay();
-    }
-
-    document.getElementById('playBtn').addEventListener('click', togglePlay);
-    document.getElementById('nextBtn').addEventListener('click', nextTrack);
-    document.getElementById('prevBtn').addEventListener('click', prevTrack);
-
-    document.getElementById('progressBar').addEventListener('click', (e) => {
-      const bar = e.currentTarget.getBoundingClientRect();
-      const clickRatio = (e.clientX - bar.left) / bar.width;
-      const song = music[state.currentTrack];
-      state.progress = Math.min(Math.max(clickRatio * song.duration, 0), song.duration);
-      document.getElementById('progressFill').style.width = `${(state.progress / song.duration) * 100}%`;
-      document.getElementById('currentTime').textContent = formatTime(state.progress);
-    });
-
-    renderTrackList(filteredTracks());
-    updatePlayer();
-
-    // GAMES
-    function setGamePanel(name) {
-      document.querySelectorAll('.game-panel').forEach(panel => panel.classList.remove('active'));
-      const panel = document.getElementById(name + '-panel');
-      if (panel) panel.classList.add('active');
-    }
-
-    document.querySelectorAll('[data-game]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const game = btn.dataset.game;
-        setGamePanel(game);
-        if (game === 'snake') initSnake();
-        if (game === 'flappy') initFlappy();
-        if (game === 'pong') initPong();
-        if (game === 'breakout') initBreakout();
-        if (game === 'memory') initMemory();
-        if (game === 'space') initSpace();
-      });
-    });
-
-    function hideAllPanels() {
-      document.querySelectorAll('.game-panel').forEach(panel => panel.classList.remove('active'));
-    }
-
-    function initSnake() {
-      const canvas = document.getElementById('snakeCanvas');
-      const ctx = canvas.getContext('2d');
-      let snake = [{x: 130, y: 200}];
-      let dir = {x: 10, y: 0};
-      let food = {x: 300, y: 200};
-      let score = 0;
-      let best = Number(localStorage.getItem('snakeBest') || 0);
-      let timer;
-      document.getElementById('snakeBest').textContent = best;
-
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowUp' && dir.y === 0) dir = {x: 0, y: -10};
-        if (e.key === 'ArrowDown' && dir.y === 0) dir = {x: 0, y: 10};
-        if (e.key === 'ArrowLeft' && dir.x === 0) dir = {x: -10, y: 0};
-        if (e.key === 'ArrowRight' && dir.x === 0) dir = {x: 10, y: 0};
-      });
-
-      function render() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#0b1220';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        ctx.fillStyle = '#00d4ff';
-        for (const part of snake) ctx.fillRect(part.x, part.y, 10, 10);
-
-        ctx.fillStyle = '#ff4d9d';
-        ctx.fillRect(food.x, food.y, 10, 10);
-
-        document.getElementById('snakeScore').textContent = score;
+      function formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${String(secs).padStart(2, '0')}`;
       }
 
-      function tick() {
-        const head = {x: snake[0].x + dir.x, y: snake[0].y + dir.y};
+      function visibleTracks() {
+        const query = searchInput.value.trim().toLowerCase();
+        return tracks.filter(track => {
+          const matchGenre = currentGenre === 'all' || track.genre === currentGenre;
+          const haystack = `${track.title} ${track.artist} ${track.album}`.toLowerCase();
+          const matchQuery = !query || haystack.includes(query);
+          return matchGenre && matchQuery;
+        });
+      }
 
-        if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height || snake.some(seg => seg.x === head.x && seg.y === head.y)) {
-          clearInterval(timer);
-          best = Math.max(best, score);
-          localStorage.setItem('snakeBest', best);
-          document.getElementById('snakeBest').textContent = best;
-          alert('Game Over!');
-          hideAllPanels();
+      function renderTracks() {
+        const items = visibleTracks();
+        const list = document.getElementById('trackList');
+
+        if (!items.length) {
+          list.innerHTML = '<li class="track" style="justify-content:center; color:#5f6368;">No songs found.</li>';
           return;
         }
 
-        snake.unshift(head);
-        if (head.x === food.x && head.y === food.y) {
-          score += 10;
-          food = {x: Math.floor(Math.random() * 85) * 10, y: Math.floor(Math.random() * 40) * 10};
+        list.innerHTML = items.map(track => {
+          const realIndex = tracks.indexOf(track);
+          const active = realIndex === currentTrack ? 'active' : '';
+          return `
+            <li class="track ${active}" data-index="${realIndex}">
+              <div class="track-art">♫</div>
+              <div class="track-info">
+                <div class="track-name">${track.title}</div>
+                <div class="track-meta">${track.artist} • ${track.album}</div>
+              </div>
+            </li>
+          `;
+        }).join('');
+
+        list.querySelectorAll('.track').forEach(el => {
+          el.addEventListener('click', () => {
+            const idx = Number(el.dataset.index);
+            selectTrack(idx, true);
+          });
+        });
+      }
+
+      function updateNowPlaying() {
+        const track = tracks[currentTrack];
+        if (!track) return;
+
+        document.getElementById('songTitle').textContent = track.title;
+        document.getElementById('songArtist').textContent = `${track.artist} • ${track.album}`;
+        document.getElementById('totalTime').textContent = formatTime(track.duration);
+        document.getElementById('cover').textContent = '♫';
+        document.getElementById('cover').style.background = `linear-gradient(135deg, ${pickColor(track.genre)}, #7ab5ff)`;
+        document.getElementById('progressFill').style.width = '0%';
+        document.getElementById('currentTime').textContent = '0:00';
+        progress = 0;
+      }
+
+      function pickColor(genre) {
+        const colors = {
+          pop: '#1a73e8',
+          rock: '#d93025',
+          hiphop: '#188038',
+          electronic: '#8e24aa',
+          indie: '#f9ab00'
+        };
+        return colors[genre] || '#5f6368';
+      }
+
+      function ensureAudio() {
+        if (!audioContext) {
+          const Ctx = window.AudioContext || window.webkitAudioContext;
+          audioContext = new Ctx();
+        }
+        if (audioContext.state === 'suspended') {
+          audioContext.resume();
+        }
+      }
+
+      function playTone(freq, duration = 0.18, type = 'triangle', volume = 0.05) {
+        ensureAudio();
+        const osc = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        osc.type = type;
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(volume, audioContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioContext.destination);
+        osc.start();
+        osc.stop(audioContext.currentTime + duration);
+      }
+
+      function startLoop() {
+        const track = tracks[currentTrack];
+        if (!track) return;
+
+        let step = 0;
+        loopTimer = setInterval(() => {
+          const note = track.notes[step % track.notes.length];
+          playTone(note, 0.18, 'triangle', 0.05);
+          step++;
+
+          progress = (step * 0.18) % track.duration;
+          const pct = (progress / track.duration) * 100;
+          document.getElementById('progressFill').style.width = `${pct}%`;
+          document.getElementById('currentTime').textContent = formatTime(Math.floor(progress));
+        }, 220);
+      }
+
+      function stopLoop() {
+        if (loopTimer) {
+          clearInterval(loopTimer);
+          loopTimer = null;
+        }
+      }
+
+      function selectTrack(index, autoPlay = false) {
+        const safeIndex = ((index % tracks.length) + tracks.length) % tracks.length;
+        currentTrack = safeIndex;
+        renderTracks();
+        updateNowPlaying();
+        if (autoPlay) {
+          if (!isPlaying) {
+            togglePlay();
+          } else {
+            stopLoop();
+            startLoop();
+          }
+        }
+      }
+
+      function togglePlay() {
+        isPlaying = !isPlaying;
+        document.getElementById('playToggle').textContent = isPlaying ? '❚❚' : '▶';
+
+        if (isPlaying) {
+          ensureAudio();
+          startLoop();
         } else {
-          snake.pop();
+          stopLoop();
         }
-        render();
       }
 
-      render();
-      clearInterval(timer);
-      timer = setInterval(tick, 120);
-    }
-
-    function initFlappy() {
-      const canvas = document.getElementById('flappyCanvas');
-      const ctx = canvas.getContext('2d');
-      let bird = {x: 120, y: 200, vy: 0};
-      let pipes = [];
-      let score = 0;
-      let gameOver = false;
-
-      function reset() {
-        bird = {x: 120, y: 200, vy: 0};
-        pipes = [];
-        score = 0;
-        gameOver = false;
-      }
-
-      document.addEventListener('keydown', (e) => {
-        if (e.code === 'Space' || e.key === 'ArrowUp') bird.vy = -6;
+      document.getElementById('nextBtn').addEventListener('click', () => {
+        selectTrack(currentTrack + 1, true);
       });
-      canvas.addEventListener('click', () => bird.vy = -6);
 
-      function tick() {
-        if (gameOver) return;
-        bird.vy += 0.38;
-        bird.y += bird.vy;
+      document.getElementById('prevBtn').addEventListener('click', () => {
+        selectTrack(currentTrack - 1, true);
+      });
 
-        if (bird.y > canvas.height - 20 || bird.y < 0) {
-          gameOver = true;
-          alert('Game over! Score: ' + score);
-          hideAllPanels();
-          return;
+      document.getElementById('playToggle').addEventListener('click', togglePlay);
+
+      searchInput.addEventListener('input', () => {
+        renderTracks();
+      });
+      searchInput.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          renderTracks();
+        }
+      });
+
+      document.querySelectorAll('.tag').forEach(tag => {
+        tag.addEventListener('click', () => {
+          currentGenre = tag.dataset.genre;
+          document.querySelectorAll('.tag').forEach(el => el.classList.toggle('active', el === tag));
+          renderTracks();
+        });
+      });
+
+      document.getElementById('progressBar').addEventListener('click', (event) => {
+        const rect = event.currentTarget.getBoundingClientRect();
+        const ratio = (event.clientX - rect.left) / rect.width;
+        progress = Math.max(0, Math.min(tracks[currentTrack].duration, tracks[currentTrack].duration * ratio));
+        document.getElementById('progressFill').style.width = `${(progress / tracks[currentTrack].duration) * 100}%`;
+        document.getElementById('currentTime').textContent = formatTime(Math.floor(progress));
+      });
+
+      function initGames() {
+        document.querySelectorAll('[data-game]').forEach(button => {
+          button.addEventListener('click', () => {
+            const game = button.dataset.game;
+            document.querySelectorAll('.game-area').forEach(area => area.classList.remove('active'));
+            const target = document.getElementById(`${game}Area`);
+            if (target) target.classList.add('active');
+
+            if (game === 'snake') initSnake();
+            if (game === 'flappy') initFlappy();
+            if (game === 'pong') initPong();
+            if (game === 'breakout') initBreakout();
+            if (game === 'memory') initMemory();
+            if (game === 'space') initSpace();
+          });
+        });
+
+        document.querySelectorAll('.back').forEach(button => {
+          button.addEventListener('click', () => {
+            const target = button.dataset.close;
+            const area = document.getElementById(`${target}Area`);
+            if (area) area.classList.remove('active');
+          });
+        });
+      }
+
+      function initSnake() {
+        const canvas = document.getElementById('snakeCanvas');
+        const ctx = canvas.getContext('2d');
+        let snake = [{ x: 100, y: 200 }, { x: 90, y: 200 }, { x: 80, y: 200 }];
+        let dir = { x: 10, y: 0 };
+        let food = { x: 260, y: 220 };
+        let score = 0;
+
+        function reset() {
+          snake = [{ x: 100, y: 200 }, { x: 90, y: 200 }, { x: 80, y: 200 }];
+          dir = { x: 10, y: 0 };
+          food = { x: 260, y: 220 };
+          score = 0;
+          document.getElementById('snakeScore').textContent = score;
         }
 
-        if (Math.random() < 0.02) {
-          const gapY = 120 + Math.random() * 130;
-          pipes.push({x: canvas.width, gapY});
-        }
+        reset();
+        document.onkeydown = (event) => {
+          if (event.key === 'ArrowUp' && dir.y === 0) dir = { x: 0, y: -10 };
+          if (event.key === 'ArrowDown' && dir.y === 0) dir = { x: 0, y: 10 };
+          if (event.key === 'ArrowLeft' && dir.x === 0) dir = { x: -10, y: 0 };
+          if (event.key === 'ArrowRight' && dir.x === 0) dir = { x: 10, y: 0 };
+        };
 
-        for (let i = pipes.length - 1; i >= 0; i--) {
-          pipes[i].x -= 3;
-          if (pipes[i].x + 60 < bird.x && !pipes[i].passed) {
-            pipes[i].passed = true;
-            score += 1;
-          }
-          if (pipes[i].x < -80) pipes.splice(i, 1);
-
-          if (
-            bird.x + 18 > pipes[i].x && bird.x < pipes[i].x + 60 &&
-            (bird.y < pipes[i].gapY || bird.y + 18 > pipes[i].gapY + 120)
-          ) {
-            gameOver = true;
-            alert('Game over! Score: ' + score);
-            hideAllPanels();
+        const loop = setInterval(() => {
+          const head = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
+          if (head.x < 0 || head.x >= 900 || head.y < 0 || head.y >= 420 || snake.some(seg => seg.x === head.x && seg.y === head.y)) {
+            clearInterval(loop);
+            alert('Game over!');
+            reset();
             return;
           }
-        }
 
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#0b1220';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        ctx.fillStyle = '#00d4ff';
-        ctx.beginPath();
-        ctx.arc(bird.x, bird.y, 14, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = '#1db954';
-        for (const pipe of pipes) {
-          ctx.fillRect(pipe.x, 0, 60, pipe.gapY);
-          ctx.fillRect(pipe.x, pipe.gapY + 120, 60, canvas.height - pipe.gapY - 120);
-        }
-
-        document.getElementById('flappyScore').textContent = score;
-        requestAnimationFrame(tick);
-      }
-
-      reset();
-      requestAnimationFrame(tick);
-    }
-
-    function initPong() {
-      const canvas = document.getElementById('pongCanvas');
-      const ctx = canvas.getContext('2d');
-      let playerY = 160, aiY = 160, ball = {x: 450, y: 210, vx: 4, vy: 3};
-      let playerScore = 0, aiScore = 0;
-
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowUp') playerY = Math.max(0, playerY - 18);
-        if (e.key === 'ArrowDown') playerY = Math.min(canvas.height - 100, playerY + 18);
-      });
-
-      function tick() {
-        aiY += (ball.y - (aiY + 50)) * 0.08;
-        ball.x += ball.vx;
-        ball.y += ball.vy;
-
-        if (ball.y < 0 || ball.y > canvas.height - 12) ball.vy *= -1;
-
-        if (ball.x < 20 && ball.x > 0 && ball.y > playerY && ball.y < playerY + 100) {
-          ball.vx *= -1;
-        }
-
-        if (ball.x > canvas.width - 30 && ball.x < canvas.width && ball.y > aiY && ball.y < aiY + 100) {
-          ball.vx *= -1;
-        }
-
-        if (ball.x < 0) {
-          aiScore += 1;
-          resetBall();
-        }
-        if (ball.x > canvas.width) {
-          playerScore += 1;
-          resetBall();
-        }
-
-        document.getElementById('playerScore').textContent = playerScore;
-        document.getElementById('aiScore').textContent = aiScore;
-
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#09121d';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        ctx.fillStyle = '#00d4ff';
-        ctx.fillRect(20, playerY, 12, 100);
-        ctx.fillRect(canvas.width - 32, aiY, 12, 100);
-
-        ctx.fillStyle = '#ff4d9d';
-        ctx.fillRect(ball.x, ball.y, 12, 12);
-
-        requestAnimationFrame(tick);
-      }
-
-      function resetBall() {
-        ball = {x: canvas.width / 2, y: canvas.height / 2, vx: (Math.random() > 0.5 ? 4 : -4), vy: (Math.random() * 6) - 3};
-      }
-
-      resetBall();
-      requestAnimationFrame(tick);
-    }
-
-    function initBreakout() {
-      const canvas = document.getElementById('breakoutCanvas');
-      const ctx = canvas.getContext('2d');
-      let paddle = {x: 350, y: 380, w: 200, h: 18};
-      let ball = {x: 450, y: 280, r: 10, vx: 4, vy: -4};
-      let bricks = [];
-      let score = 0;
-      let lives = 3;
-
-      for (let i = 0; i < 6; i++) {
-        for (let j = 0; j < 8; j++) {
-          bricks.push({x: 30 + j * 108, y: 30 + i * 30, w: 90, h: 20, alive: true});
-        }
-      }
-
-      document.addEventListener('mousemove', (e) => {
-        const rect = canvas.getBoundingClientRect();
-        paddle.x = Math.min(Math.max((e.clientX - rect.left) - paddle.w / 2, 0), canvas.width - paddle.w);
-      });
-
-      function tick() {
-        ball.x += ball.vx;
-        ball.y += ball.vy;
-
-        if (ball.x < 0 || ball.x > canvas.width) ball.vx *= -1;
-        if (ball.y < 0) ball.vy *= -1;
-
-        if (ball.y + ball.r > paddle.y && ball.y - ball.r < paddle.y + paddle.h && ball.x > paddle.x && ball.x < paddle.x + paddle.w) {
-          ball.vy *= -1;
-        }
-
-        for (const brick of bricks) {
-          if (!brick.alive) continue;
-          if (ball.x > brick.x && ball.x < brick.x + brick.w && ball.y > brick.y && ball.y < brick.y + brick.h) {
-            brick.alive = false;
-            ball.vy *= -1;
+          snake.unshift(head);
+          if (head.x === food.x && head.y === food.y) {
             score += 10;
-            document.getElementById('breakoutScore').textContent = score;
+            document.getElementById('snakeScore').textContent = score;
+            food = {
+              x: Math.floor(Math.random() * 85) * 10,
+              y: Math.floor(Math.random() * 41) * 10
+            };
+          } else {
+            snake.pop();
           }
-        }
 
-        if (ball.y > canvas.height) {
-          lives -= 1;
-          document.getElementById('breakoutLives').textContent = lives;
-          if (lives <= 0) {
-            alert('Game over! Score: ' + score);
-            hideAllPanels();
-            return;
-          }
-          ball = {x: 450, y: 270, r: 10, vx: 4, vy: -4};
-        }
-
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#0b1220';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        ctx.fillStyle = '#00d4ff';
-        ctx.fillRect(paddle.x, paddle.y, paddle.w, paddle.h);
-
-        ctx.fillStyle = '#ff4d9d';
-        ctx.beginPath();
-        ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
-        ctx.fill();
-
-        for (const brick of bricks) {
-          if (!brick.alive) continue;
-          ctx.fillStyle = '#1db954';
-          ctx.fillRect(brick.x, brick.y, brick.w, brick.h);
-        }
-
-        requestAnimationFrame(tick);
+          ctx.fillStyle = '#0f1722';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.fillStyle = '#34a853';
+          snake.forEach(seg => ctx.fillRect(seg.x, seg.y, 10, 10));
+          ctx.fillStyle = '#fbbc04';
+          ctx.fillRect(food.x, food.y, 10, 10);
+        }, 100);
       }
 
-      requestAnimationFrame(tick);
-    }
+      function initFlappy() {
+        const canvas = document.getElementById('flappyCanvas');
+        const ctx = canvas.getContext('2d');
+        let bird = { x: 120, y: 180, vy: 0 };
+        let pipes = [];
+        let score = 0;
+        let ended = false;
 
-    function initMemory() {
-      const board = document.getElementById('memoryBoard');
-      const emojis = ['🎮', '🎵', '🚀', '🤖', '🌙', '⚡', '🎯', '🎉'];
-      const cards = [...emojis, ...emojis].sort(() => Math.random() - 0.5);
-      let flipped = [];
-      let matches = 0;
-      let moves = 0;
+        function reset() {
+          bird = { x: 120, y: 180, vy: 0 };
+          pipes = [];
+          score = 0;
+          ended = false;
+          document.getElementById('flappyScore').textContent = score;
+        }
 
-      board.innerHTML = '';
-      cards.forEach((emoji, i) => {
-        const btn = document.createElement('button');
-        btn.textContent = '?';
-        btn.style.cssText = 'padding: 22px 0; font-size: 1.8rem; border-radius: 14px; border: 1px solid rgba(255,255,255,0.08); background: linear-gradient(135deg, rgba(0,212,255,0.16), rgba(139,92,246,0.16)); color: white; cursor:pointer;';
-        btn.addEventListener('click', () => {
-          if (btn.textContent !== '?') return;
-          if (flipped.length >= 2) return;
-          btn.textContent = emoji;
-          flipped.push({emoji, btn});
-          if (flipped.length === 2) {
-            moves += 1;
-            document.getElementById('memoryMoves').textContent = moves;
-            if (flipped[0].emoji === flipped[1].emoji) {
-              matches += 1;
-              document.getElementById('memoryMatches').textContent = matches;
-              setTimeout(() => {
-                flipped[0].btn.style.opacity = '0.5';
-                flipped[1].btn.style.opacity = '0.5';
-                flipped = [];
-                if (matches === emojis.length) alert('You win!');
-              }, 500);
-            } else {
-              setTimeout(() => {
-                flipped[0].btn.textContent = '?';
-                flipped[1].btn.textContent = '?';
-                flipped = [];
-              }, 700);
+        reset();
+        document.onkeydown = () => { if (!ended) bird.vy = -8; };
+        canvas.onclick = () => { if (!ended) bird.vy = -8; };
+
+        const loop = setInterval(() => {
+          if (ended) return;
+          bird.vy += 0.5;
+          bird.y += bird.vy;
+
+          if (Math.random() < 0.03) {
+            pipes.push({ x: 900, gap: 90 + Math.random() * 120 });
+          }
+
+          for (let i = pipes.length - 1; i >= 0; i--) {
+            pipes[i].x -= 4;
+            if (bird.x > pipes[i].x && bird.x < pipes[i].x + 50 && (bird.y < pipes[i].gap || bird.y > pipes[i].gap + 110)) {
+              ended = true;
+            }
+            if (pipes[i].x < -50) {
+              pipes.splice(i, 1);
+              score += 1;
+              document.getElementById('flappyScore').textContent = score;
             }
           }
-        });
-        board.appendChild(btn);
-      });
-    }
 
-    function initSpace() {
-      const canvas = document.getElementById('spaceCanvas');
-      const ctx = canvas.getContext('2d');
-      const player = {x: canvas.width / 2, y: canvas.height - 40, w: 20, h: 20};
-      const bullets = [];
-      const enemies = [];
-      let score = 0;
-      let wave = 1;
+          if (bird.y < 0 || bird.y > 420) ended = true;
 
-      for (let i = 0; i < 6; i++) {
-        for (let j = 0; j < 5; j++) {
-          enemies.push({x: 130 + j * 120, y: 50 + i * 40, w: 26, h: 18, alive: true});
-        }
+          ctx.fillStyle = '#87ceeb';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.fillStyle = '#fbbc04';
+          ctx.beginPath();
+          ctx.arc(bird.x, bird.y, 12, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#34a853';
+          pipes.forEach(pipe => {
+            ctx.fillRect(pipe.x, 0, 50, pipe.gap);
+            ctx.fillRect(pipe.x, pipe.gap + 110, 50, 420 - pipe.gap - 110);
+          });
+
+          if (ended) {
+            clearInterval(loop);
+            alert(`Game over! Score: ${score}`);
+            reset();
+          }
+        }, 30);
       }
 
-      function tick() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#0b1220';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      function initPong() {
+        const canvas = document.getElementById('pongCanvas');
+        const ctx = canvas.getContext('2d');
+        let playerY = 160;
+        let aiY = 160;
+        let ball = { x: 450, y: 210, vx: 5, vy: 4 };
+        let pScore = 0;
+        let aScore = 0;
 
-        if (Math.random() < 0.02) {
-          for (const enemy of enemies.filter(e => e.alive)) {
-            if (Math.random() < 0.15) bullets.push({x: enemy.x + 10, y: enemy.y + 20, vy: 4});
+        document.onkeydown = (event) => {
+          if (event.key === 'ArrowUp') playerY = Math.max(0, playerY - 18);
+          if (event.key === 'ArrowDown') playerY = Math.min(320, playerY + 18);
+        };
+
+        const loop = setInterval(() => {
+          aiY += (ball.y - (aiY + 40)) * 0.08;
+          ball.x += ball.vx;
+          ball.y += ball.vy;
+
+          if (ball.y <= 0 || ball.y >= 408) ball.vy *= -1;
+          if (ball.x <= 28 && ball.y >= playerY && ball.y <= playerY + 100) ball.vx *= -1;
+          if (ball.x >= 860 && ball.y >= aiY && ball.y <= aiY + 100) ball.vx *= -1;
+
+          if (ball.x < 0) {
+            aScore += 1;
+            document.getElementById('pongAI').textContent = aScore;
+            ball = { x: 450, y: 210, vx: 5, vy: 4 };
+          }
+          if (ball.x > 900) {
+            pScore += 1;
+            document.getElementById('pongPlayer').textContent = pScore;
+            ball = { x: 450, y: 210, vx: -5, vy: 4 };
+          }
+
+          ctx.fillStyle = '#0f1722';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.fillStyle = '#34a853';
+          ctx.fillRect(10, playerY, 18, 100);
+          ctx.fillRect(872, aiY, 18, 100);
+          ctx.fillStyle = '#fbbc04';
+          ctx.fillRect(ball.x, ball.y, 12, 12);
+        }, 30);
+      }
+
+      function initBreakout() {
+        const canvas = document.getElementById('breakoutCanvas');
+        const ctx = canvas.getContext('2d');
+        let paddle = { x: 350, y: 380, w: 200 };
+        let ball = { x: 450, y: 300, vx: 4, vy: -4 };
+        let bricks = [];
+        let score = 0;
+        let lives = 3;
+
+        for (let row = 0; row < 5; row++) {
+          for (let col = 0; col < 8; col++) {
+            bricks.push({ x: 30 + col * 105, y: 30 + row * 25, w: 90, h: 18 });
           }
         }
 
-        document.addEventListener('keydown', (e) => {
-          if (e.key === 'ArrowLeft') player.x = Math.max(0, player.x - 14);
-          if (e.key === 'ArrowRight') player.x = Math.min(canvas.width - player.w, player.x + 14);
-          if (e.key === ' ') bullets.push({x: player.x + 9, y: player.y - 10, vy: -7});
+        document.onmousemove = (event) => {
+          const rect = canvas.getBoundingClientRect();
+          const x = event.clientX - rect.left;
+          paddle.x = Math.max(0, Math.min(canvas.width - paddle.w, x - paddle.w / 2));
+        };
+
+        const loop = setInterval(() => {
+          ball.x += ball.vx;
+          ball.y += ball.vy;
+
+          if (ball.x <= 0 || ball.x >= 888) ball.vx *= -1;
+          if (ball.y <= 0) ball.vy *= -1;
+          if (ball.y >= paddle.y && ball.y <= paddle.y + 18 && ball.x >= paddle.x && ball.x <= paddle.x + paddle.w) ball.vy *= -1;
+
+          for (let i = bricks.length - 1; i >= 0; i--) {
+            const brick = bricks[i];
+            if (ball.x > brick.x && ball.x < brick.x + brick.w && ball.y > brick.y && ball.y < brick.y + brick.h) {
+              bricks.splice(i, 1);
+              ball.vy *= -1;
+              score += 10;
+              document.getElementById('breakoutScore').textContent = score;
+            }
+          }
+
+          if (ball.y > 420) {
+            lives -= 1;
+            document.getElementById('breakoutLives').textContent = lives;
+            ball = { x: 450, y: 300, vx: 4, vy: -4 };
+            if (lives <= 0) {
+              clearInterval(loop);
+              alert('Game over!');
+            }
+          }
+
+          ctx.fillStyle = '#0f1722';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.fillStyle = '#34a853';
+          bricks.forEach(brick => ctx.fillRect(brick.x, brick.y, brick.w, brick.h));
+          ctx.fillStyle = '#4285f4';
+          ctx.fillRect(paddle.x, paddle.y, paddle.w, 18);
+          ctx.fillStyle = '#fbbc04';
+          ctx.fillRect(ball.x, ball.y, 12, 12);
+        }, 30);
+      }
+
+      function initMemory() {
+        const grid = document.getElementById('memoryGrid');
+        const emojis = ['🎮', '🎵', '🚀', '🤖', '🌙', '⚡', '🎯', '🎉'];
+        const cards = [...emojis, ...emojis].sort(() => Math.random() - 0.5);
+        let opened = [];
+        let matched = 0;
+
+        grid.innerHTML = cards.map((emoji, index) => `
+          <button class="memory-card" data-index="${index}" style="font-size:2rem; background:#f4f8ff; border:1px solid #dadce0; border-radius:12px; padding:24px 8px; cursor:pointer; color:#202124;">?</button>
+        `).join('');
+
+        grid.querySelectorAll('.memory-card').forEach(button => {
+          button.addEventListener('click', () => {
+            if (button.textContent !== '?' || opened.length >= 2) return;
+            button.textContent = cards[Number(button.dataset.index)];
+            opened.push(button);
+
+            if (opened.length === 2) {
+              const first = opened[0];
+              const second = opened[1];
+
+              if (cards[Number(first.dataset.index)] === cards[Number(second.dataset.index)]) {
+                matched += 1;
+                document.getElementById('memoryMatches').textContent = matched;
+                opened = [];
+                if (matched === emojis.length) {
+                  alert('You win!');
+                }
+              } else {
+                setTimeout(() => {
+                  first.textContent = '?';
+                  second.textContent = '?';
+                  opened = [];
+                }, 700);
+              }
+            }
+          });
         });
+      }
 
-        ctx.fillStyle = '#00d4ff';
-        ctx.fillRect(player.x, player.y, player.w, player.h);
+      function initSpace() {
+        const canvas = document.getElementById('spaceCanvas');
+        const ctx = canvas.getContext('2d');
+        let player = { x: 430, y: 360 };
+        let bullets = [];
+        let enemies = [];
+        let score = 0;
 
-        for (const enemy of enemies) {
-          if (!enemy.alive) continue;
-          ctx.fillStyle = '#ff4d9d';
-          ctx.fillRect(enemy.x, enemy.y, enemy.w, enemy.h);
+        for (let i = 0; i < 18; i++) {
+          enemies.push({ x: 60 + (i % 6) * 125, y: 30 + Math.floor(i / 6) * 60 });
         }
 
-        for (let i = bullets.length - 1; i >= 0; i--) {
-          bullets[i].y += bullets[i].vy;
-          if (bullets[i].vy < 0) {
-            for (const enemy of enemies) {
-              if (!enemy.alive) continue;
-              if (bullets[i].x > enemy.x && bullets[i].x < enemy.x + enemy.w && bullets[i].y > enemy.y && bullets[i].y < enemy.y + enemy.h) {
-                enemy.alive = false;
+        document.onkeydown = (event) => {
+          if (event.key === 'ArrowLeft') player.x = Math.max(0, player.x - 25);
+          if (event.key === 'ArrowRight') player.x = Math.min(870, player.x + 25);
+          if (event.key === ' ') bullets.push({ x: player.x + 10, y: player.y - 10 });
+        };
+
+        const loop = setInterval(() => {
+          bullets.forEach((bullet, i) => {
+            bullet.y -= 8;
+            for (let j = enemies.length - 1; j >= 0; j--) {
+              const enemy = enemies[j];
+              if (bullet.x > enemy.x && bullet.x < enemy.x + 28 && bullet.y > enemy.y && bullet.y < enemy.y + 24) {
+                enemies.splice(j, 1);
                 bullets.splice(i, 1);
                 score += 10;
                 document.getElementById('spaceScore').textContent = score;
-                break;
               }
             }
-          }
-          if (bullets[i]) {
-            ctx.fillStyle = '#fff';
-            ctx.fillRect(bullets[i].x, bullets[i].y, 3, 10);
-          }
-        }
+          });
 
-        document.getElementById('spaceWave').textContent = wave;
-        requestAnimationFrame(tick);
+          ctx.fillStyle = '#0f1722';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.fillStyle = '#4285f4';
+          ctx.fillRect(player.x, player.y, 40, 22);
+          ctx.fillStyle = '#fbbc04';
+          bullets.forEach(bullet => ctx.fillRect(bullet.x, bullet.y, 6, 12));
+          ctx.fillStyle = '#34a853';
+          enemies.forEach(enemy => ctx.fillRect(enemy.x, enemy.y, 28, 20));
+        }, 30);
       }
 
-      requestAnimationFrame(tick);
-    }
-
-  </script>
-</body>
+      document.addEventListener('DOMContentLoaded', () => {
+        renderTracks();
+        updateNowPlaying();
+        initGames();
+      });
+    </script>
+  </body>
 </html>
